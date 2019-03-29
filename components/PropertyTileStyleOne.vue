@@ -8,13 +8,19 @@
       </button>
     </div>
     <router-link :to="{ path: `/property/${title}`}">
-      <figure class="image is-bg-primary-invert">
-        <img class="object-fit" :src="image" />
+      <figure class="image">
+        <img :class="`object-fit ${$style.featuredImage}`" :src="image" @load="event => imageLoaded(event)" />
       </figure>
       <div class="prop-description">
-        <p class="prop-timestamp">{{ marketDays }}</p>
+        <p class="prop-timestamp" v-if="status !== 'sold'">{{ marketDays }}</p>
         <div class="bottom-description">
-            <p class="prop-title"><svg class="icon-map-point__sale" ><use xlink:href="#icon-map-point__sale"/></svg>house {{ status }}</p>
+            <p class="prop-title">
+              <svg :class="`icon-map-point__${status}`" >
+                <use v-bind="{'xlink:href':'#icon-map-point__' + status}"></use>
+              </svg>
+              {{ type }}
+              {{ propertyStatusMessage(status) }}
+            </p>
             <p class="prop-stats">
                 <span>{{ bds }} bds</span><span
                     class="middle-dot"
@@ -24,8 +30,8 @@
                     aria-hidden="true">&nbsp;</span>
                 <span>{{ sqft }} sqft</span>
             </p>
-            <p class="prop-price">{{ price | currency }}</p>
-            <p class="prop-address">{{ address }}, {{ city }}, FL {{ postalCode }}</p>
+            <p class="prop-price">{{ price | currency }}{{ propertyStatusPostfix(status) }}</p>
+            <p class="prop-address">{{ address }}, {{ city }}, {{ state }} {{ postalCode }}</p>
         </div>
       </div>
     </router-link>
@@ -33,13 +39,21 @@
 </template>
 
 <script>
-// import objectFitImages from 'object-fit-images'
+import {
+  propertyStatusPostfix,
+  propertyStatusMessage
+} from '@/utils'
+
 export default {
   name: 'PropertyTile',
   props: {
     id: {
       type: Number,
       default: 0
+    },
+    type: {
+      type: String,
+      default: ''
     },
     bds: {
       type: Number,
@@ -69,6 +83,10 @@ export default {
       type: String,
       default: ''
     },
+    state: {
+      type: String,
+      default: ''
+    },
     postalCode: {
       type: String,
       default: ''
@@ -91,6 +109,13 @@ export default {
     }
   },
   methods: {
+    propertyStatusPostfix,
+    propertyStatusMessage,
+
+    imageLoaded (event) {
+      event.currentTarget.classList.add(this.$style.imageLoaded)
+    },
+
     toggleFavorites () {
       if (this.isFavorite) {
         this.$emit('removeFromFavorites', this.id)
@@ -103,12 +128,26 @@ export default {
 </script>
 
 <style lang="sass" scoped>
-.property-tile
-  height: 100%
-
-.image
-  height: 100%
-
-  img
+  .property-tile
     height: 100%
+
+  .image
+    height: 100%
+    filter: brightness(85%)
+    background-color: #e0e0e0
+
+    img
+      height: 100%
+</style>
+
+<style lang="sass" module>
+.featuredImage
+  opacity: 0
+
+.imageLoaded
+  transition: opacity .5s
+  opacity: 1
+
+article.property-tile img
+  height: 185px
 </style>
